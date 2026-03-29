@@ -34,14 +34,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let button = statusItem.button {
             if let svgURL = Bundle.module.url(forResource: "icon-mark", withExtension: "svg"),
-               let icon = NSImage(contentsOf: svgURL) {
-                icon.isTemplate = true
-                icon.size = NSSize(width: 16, height: 16)
-                button.image = icon
+               let svgImage = NSImage(contentsOf: svgURL) {
+                // Render SVG into a bitmap so template tinting works reliably
+                let size = NSSize(width: 16, height: 16)
+                let rendered = NSImage(size: size)
+                rendered.lockFocus()
+                svgImage.draw(
+                    in: NSRect(origin: .zero, size: size),
+                    from: NSRect(origin: .zero, size: svgImage.size),
+                    operation: .sourceOver,
+                    fraction: 1.0
+                )
+                rendered.unlockFocus()
+                rendered.isTemplate = true
+                button.image = rendered
             } else {
                 button.image = NSImage(
                     systemSymbolName: "circle.fill",
-                    accessibilityDescription: "OCC"
+                    accessibilityDescription: "One's Command Center"
                 )
                 button.image?.size = NSSize(width: 14, height: 14)
             }

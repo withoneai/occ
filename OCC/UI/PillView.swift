@@ -410,6 +410,7 @@ struct PillDot: View {
     @State private var isPulsing = false
     @State private var glowOpacity: Double = 0
     @State private var statusBlink = false
+    @State private var isHovering = false
 
     private var hasAiActivity: Bool { requestedCount > 0 || workingCount > 0 }
 
@@ -423,7 +424,8 @@ struct PillDot: View {
 
             OCCIcon(color: iconColor, size: iconSize)
                 .opacity(iconOpacity)
-                .scaleEffect(isPulsing ? 1.05 : 1.0)
+                .scaleEffect(isHovering ? 1.25 : (isPulsing ? 1.05 : 1.0))
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovering)
 
             // Badges
             VStack(spacing: 2) {
@@ -445,6 +447,9 @@ struct PillDot: View {
                 }
             }
             .offset(x: 12, y: count > 1 ? -6 : -10)
+        }
+        .onHover { hovering in
+            isHovering = hovering
         }
         .onChange(of: isActive) { active in
             if active {
