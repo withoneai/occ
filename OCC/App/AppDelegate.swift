@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var cliBridge: CLIBridge!
     private var folderWatcher: FolderWatcher!
     private var folderSubscription: AnyCancellable?
+    private var clickMonitor: Any?
 
     let nudgeRouter = NotificationRouter()
     let watchedFolders = WatchedFolders()
@@ -49,14 +50,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 300, height: 460)
+        popover.contentSize = NSSize(width: 320, height: 440)
         popover.behavior = .transient
+        popover.animates = true
         popover.contentViewController = NSHostingController(
             rootView: MenuBarPopover(
                 router: nudgeRouter,
                 watchedFolders: watchedFolders,
                 onPositionChange: { [weak self] position in
                     self?.pillPanel.reposition(to: position)
+                },
+                onScreenChange: { [weak self] screenId in
+                    self?.pillPanel.moveToScreen(id: screenId)
                 },
                 onAddFolder: { [weak self] in
                     self?.addFolder()
@@ -68,9 +73,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func togglePopover() {
         guard let button = statusItem.button else { return }
         if popover.isShown {
-            popover.performClose(nil)
+            closePopover()
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            clickMonitor = NSEvent.addGlobalMonitorForEvents(
+                matching: [.leftMouseDown, .rightMouseDown]
+            ) { [weak self] _ in
+                self?.closePopover()
+            }
+        }
+    }
+
+    private func closePopover() {
+        popover.performClose(nil)
+        if let monitor = clickMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickMonitor = nil
         }
     }
 
@@ -90,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             panel.canChooseFiles = false
             panel.canChooseDirectories = true
             panel.allowsMultipleSelection = false
-            panel.message = "Choose a project folder to watch for .uni nudge files"
+            panel.message = "Choose a project folder to watch for .occ nudge files"
             panel.prompt = "Watch"
 
             panel.begin { response in

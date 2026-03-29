@@ -1,180 +1,242 @@
 import SwiftUI
 import AppKit
+import CoreGraphics
 
 struct MenuBarPopover: View {
     @ObservedObject var router: NotificationRouter
     @ObservedObject var watchedFolders: WatchedFolders
     let onPositionChange: (PillPosition) -> Void
+    let onScreenChange: (UInt32) -> Void
     let onAddFolder: () -> Void
 
     @AppStorage("occ.pill.position") private var positionRaw = PillPosition.bottomRight.rawValue
+    @AppStorage("occ.pill.screenId") private var selectedScreenId: Int = 0
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(spacing: 0) {
             // Header
-            HStack {
-                Text("OCC")
-                    .font(.system(size: 14, weight: .semibold))
+            HStack(alignment: .firstTextBaseline) {
+                Text("One's Command Center")
+                    .font(.system(size: 13, weight: .semibold))
                 Spacer()
                 Text("v0.2")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10, weight: .regular))
                     .foregroundStyle(.tertiary)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 18)
+            .padding(.bottom, 14)
 
-            Divider()
-
-            // Position picker
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Position")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-
-                Picker("", selection: $positionRaw) {
-                    ForEach(PillPosition.allCases, id: \.rawValue) { pos in
-                        Text(pos.label).tag(pos.rawValue)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .onChange(of: positionRaw) { newValue in
-                    if let pos = PillPosition(rawValue: newValue) {
-                        onPositionChange(pos)
-                    }
-                }
-            }
-
-            Divider()
-
-            // Watched Folders
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Watched Folders")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-
-                if watchedFolders.folders.isEmpty {
-                    Text("Add a project folder to watch for .uni nudge files")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 4)
-                } else {
-                    VStack(spacing: 4) {
-                        ForEach(watchedFolders.folders, id: \.path) { folder in
-                            HStack(spacing: 6) {
-                                Image(systemName: "folder.fill")
-                                    .font(.system(size: 9))
-                                    .foregroundStyle(.secondary)
-
-                                Text(shortenedPath(folder))
-                                    .font(.system(size: 11))
-                                    .lineLimit(1)
-                                    .truncationMode(.head)
-
-                                Spacer()
-
-                                Button(action: { watchedFolders.remove(folder) }) {
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 8, weight: .semibold))
-                                        .foregroundStyle(.tertiary)
+            // Sections
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Position
+                    popoverSection {
+                        HStack {
+                            Label("Position", systemImage: "rectangle.bottomthird.inset.filled")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Picker("", selection: $positionRaw) {
+                                ForEach(PillPosition.allCases, id: \.rawValue) { pos in
+                                    Text(pos.label).tag(pos.rawValue)
                                 }
-                                .buttonStyle(.plain)
                             }
-                            .padding(.vertical, 3)
-                            .padding(.horizontal, 6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(.quaternary.opacity(0.3))
-                            )
+                            .pickerStyle(.segmented)
+                            .frame(width: 160)
+                            .onChange(of: positionRaw) { newValue in
+                                if let pos = PillPosition(rawValue: newValue) {
+                                    onPositionChange(pos)
+                                }
+                            }
                         }
                     }
-                }
 
-                Button(action: onAddFolder) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 9, weight: .semibold))
-                        Text("Add Folder")
-                            .font(.system(size: 11, weight: .medium))
+                    // Display
+                    if NSScreen.screens.count > 1 {
+                        popoverSection {
+                            HStack {
+                                Label("Display", systemImage: "display")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Picker("", selection: $selectedScreenId) {
+                                    ForEach(NSScreen.screens, id: \.displayIdInt) { screen in
+                                        Text(screen.displayName)
+                                            .tag(screen.displayIdInt)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .frame(maxWidth: 140)
+                                .onChange(of: selectedScreenId) { newValue in
+                                    onScreenChange(UInt32(newValue))
+                                }
+                            }
+                        }
                     }
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.blue)
-            }
 
-            Divider()
+                    // Watched Folders
+                    popoverSection {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Watched Folders", systemImage: "folder")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.primary)
 
-            // Recent nudges
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Recent")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
+                            if watchedFolders.folders.isEmpty {
+                                Text("Add a project folder to watch")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.tertiary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.vertical, 6)
+                            } else {
+                                VStack(spacing: 2) {
+                                    ForEach(watchedFolders.folders, id: \.path) { folder in
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "folder.fill")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(.secondary)
 
-                if router.history.isEmpty {
-                    Text("No nudges yet")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                } else {
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 6) {
-                            ForEach(router.history.prefix(10)) { nudge in
-                                HStack(spacing: 8) {
-                                    statusIcon(nudge.status)
-                                        .font(.system(size: 8))
-                                        .frame(width: 12)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(nudge.title)
-                                            .font(.system(size: 11, weight: .medium))
-                                            .lineLimit(1)
-                                        HStack(spacing: 4) {
-                                            Text(statusLabel(nudge.status))
-                                                .font(.system(size: 9, weight: .medium))
-                                                .foregroundStyle(statusColor(nudge.status))
-                                            if let folder = nudge.sourceFolder {
-                                                Text("· \(folder)")
-                                                    .font(.system(size: 9))
-                                                    .foregroundStyle(.tertiary)
+                                            Text(shortenedPath(folder))
+                                                .font(.system(size: 11))
+                                                .lineLimit(1)
+                                                .truncationMode(.middle)
+
+                                            Spacer()
+
+                                            Button(action: { watchedFolders.remove(folder) }) {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .font(.system(size: 12))
+                                                    .foregroundStyle(.quaternary)
                                             }
-                                            Text("· \(nudge.timestamp, style: .relative)")
+                                            .buttonStyle(.plain)
+                                            .contentShape(Circle())
+                                        }
+                                        .padding(.vertical, 5)
+                                        .padding(.horizontal, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(.quaternary.opacity(0.15))
+                                        )
+                                    }
+                                }
+                            }
+
+                            Button(action: onAddFolder) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 12))
+                                    Text("Add Folder")
+                                        .font(.system(size: 11, weight: .medium))
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.blue)
+                        }
+                    }
+
+                    // Recent
+                    popoverSection {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Recent", systemImage: "clock")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.primary)
+
+                            if router.history.isEmpty {
+                                Text("No nudges yet")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.tertiary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 6)
+                            } else {
+                                VStack(spacing: 2) {
+                                    ForEach(router.history.prefix(8)) { nudge in
+                                        HStack(spacing: 8) {
+                                            statusDot(nudge.status)
+                                                .frame(width: 8, height: 8)
+
+                                            Text(nudge.title)
+                                                .font(.system(size: 11))
+                                                .lineLimit(1)
+
+                                            Spacer()
+
+                                            Text(nudge.timestamp, style: .relative)
                                                 .font(.system(size: 9))
                                                 .foregroundStyle(.quaternary)
                                         }
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(.quaternary.opacity(0.08))
+                                        )
                                     }
                                 }
                             }
                         }
                     }
-                    .frame(maxHeight: 120)
                 }
             }
 
-            Divider()
+            // Footer actions
+            HStack(spacing: 12) {
+                Button {
+                    router.push(Nudge(
+                        title: "Test Notification",
+                        body: "This is a test nudge from the menu bar.",
+                        priority: .medium,
+                        url: URL(string: "https://github.com"),
+                        action: "Open GitHub"
+                    ))
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "paperplane")
+                            .font(.system(size: 10))
+                        Text("Test Nudge")
+                            .font(.system(size: 11))
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.tertiary)
 
-            // Test nudge
-            Button("Send Test Nudge") {
-                router.push(Nudge(
-                    title: "Test Notification",
-                    body: "This is a test nudge from the menu bar.",
-                    priority: .medium,
-                    url: URL(string: "https://github.com"),
-                    action: "Open GitHub"
-                ))
+                Spacer()
+
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Text("Quit")
+                        .font(.system(size: 11))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.quaternary)
             }
-            .font(.system(size: 11))
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-
-            Spacer(minLength: 0)
-
-            Button("Quit OCC") {
-                NSApplication.shared.terminate(nil)
-            }
-            .font(.system(size: 11))
-            .foregroundStyle(.secondary)
-            .buttonStyle(.plain)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
-        .padding(16)
-        .frame(width: 300, height: 460)
+        .frame(width: 320, height: 440)
+    }
+
+    // MARK: - Components
+
+    @ViewBuilder
+    private func popoverSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            content()
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+    }
+
+    @ViewBuilder
+    private func statusDot(_ status: NudgeStatus) -> some View {
+        Circle()
+            .fill(statusColor(status))
+            .overlay(
+                Circle()
+                    .strokeBorder(statusColor(status).opacity(0.3), lineWidth: 1)
+            )
     }
 
     private func shortenedPath(_ url: URL) -> String {
@@ -183,38 +245,6 @@ struct MenuBarPopover: View {
             return "~/" + components.suffix(2).joined(separator: "/")
         }
         return url.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")
-    }
-
-    @ViewBuilder
-    private func statusIcon(_ status: NudgeStatus) -> some View {
-        switch status {
-        case .approved:
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-        case .rejected:
-            Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
-        case .replied:
-            Image(systemName: "arrowshape.turn.up.left.circle.fill").foregroundStyle(.blue)
-        case .dismissed:
-            Image(systemName: "minus.circle.fill").foregroundStyle(.gray)
-        case .pending:
-            Circle().fill(.orange).frame(width: 5, height: 5)
-        case .requested:
-            Image(systemName: "arrow.up.circle.fill").foregroundStyle(.yellow)
-        case .working:
-            Image(systemName: "gear.circle.fill").foregroundStyle(.green)
-        }
-    }
-
-    private func statusLabel(_ status: NudgeStatus) -> String {
-        switch status {
-        case .approved: return "Approved"
-        case .rejected: return "Rejected"
-        case .replied: return "Replied"
-        case .dismissed: return "Dismissed"
-        case .pending: return "Pending"
-        case .requested: return "Requested"
-        case .working: return "Working"
-        }
     }
 
     private func statusColor(_ status: NudgeStatus) -> Color {
@@ -227,5 +257,24 @@ struct MenuBarPopover: View {
         case .requested: return .yellow
         case .working: return .green
         }
+    }
+}
+
+// MARK: - NSScreen helpers
+
+extension NSScreen {
+    var displayId: UInt32 {
+        (deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32) ?? 0
+    }
+
+    var displayIdInt: Int {
+        Int(displayId)
+    }
+
+    var displayName: String {
+        if CGDisplayIsBuiltin(displayId) != 0 {
+            return "Built-in Display"
+        }
+        return localizedName
     }
 }

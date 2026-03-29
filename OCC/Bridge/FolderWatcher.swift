@@ -59,7 +59,7 @@ final class FolderWatcher: @unchecked Sendable {
         // Start polling timer to catch file CONTENT changes (status updates by the AI)
         startPolling()
 
-        print("[OCC] Watching \(path) for .uni files")
+        print("[OCC] Watching \(path) for .occ files")
     }
 
     func unwatch(_ folderURL: URL) {
@@ -155,7 +155,7 @@ final class FolderWatcher: @unchecked Sendable {
     }
 
     private func uniDir(in folder: URL) -> URL {
-        let dir = folder.appendingPathComponent(".uni")
+        let dir = folder.appendingPathComponent(".occ")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
@@ -170,7 +170,7 @@ final class FolderWatcher: @unchecked Sendable {
         ) else { return [] }
 
         return contents
-            .filter { $0.pathExtension == "uni" }
+            .filter { $0.pathExtension == "occ" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 }

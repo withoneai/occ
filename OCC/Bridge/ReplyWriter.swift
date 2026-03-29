@@ -3,7 +3,7 @@ import Foundation
 enum ReplyWriter {
     static var watchedFolderPaths: [String: String] = [:]
 
-    /// Updates the original .uni file in place:
+    /// Updates the original .occ file in place:
     /// 1. Changes `status` and `next: ai` in the frontmatter
     /// 2. Appends a `---reply [human] timestamp---` block with the user's message
     static func writeReply(for nudge: Nudge, status: NudgeStatus, message: String?) {
@@ -18,7 +18,7 @@ enum ReplyWriter {
             return
         }
 
-        let uniDir = (folderPath as NSString).appendingPathComponent(".uni")
+        let uniDir = (folderPath as NSString).appendingPathComponent(".occ")
         let filePath = (uniDir as NSString).appendingPathComponent(sourceFile)
 
         // Read the current file content

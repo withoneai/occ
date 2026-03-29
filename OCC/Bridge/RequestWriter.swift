@@ -3,7 +3,7 @@ import Foundation
 enum RequestWriter {
     static var watchedFolderPaths: [String: String] = [:]
 
-    /// Writes a new .uni file as a request FROM the human TO the AI.
+    /// Writes a new .occ file as a request FROM the human TO the AI.
     /// The AI's cron job picks this up and works on it.
     static func sendRequest(_ message: String, toFolder folderName: String? = nil) {
         // Use the first watched folder if none specified
@@ -12,7 +12,7 @@ enum RequestWriter {
             return
         }
 
-        let uniDir = (path as NSString).appendingPathComponent(".uni")
+        let uniDir = (path as NSString).appendingPathComponent(".occ")
         try? FileManager.default.createDirectory(atPath: uniDir, withIntermediateDirectories: true)
 
         let timestamp = Int(Date().timeIntervalSince1970)
@@ -22,7 +22,7 @@ enum RequestWriter {
             .replacingOccurrences(of: " ", with: "-")
             .filter { $0.isLetter || $0.isNumber || $0 == "-" }
 
-        let filename = "\(timestamp)-\(slug).uni"
+        let filename = "\(timestamp)-\(slug).occ"
         let filePath = (uniDir as NSString).appendingPathComponent(filename)
 
         let isoTimestamp = ISO8601DateFormatter().string(from: Date())

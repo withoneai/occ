@@ -1,12 +1,12 @@
 # OCC Nudge
 
-Send desktop notifications to the human via OCC (One Command Center) — a subtle floating widget on their Mac. All communication happens through `.uni` files inside the `.uni/` folder of the project root.
+Send desktop notifications to the human via OCC (One Command Center) — a subtle floating widget on their Mac. All communication happens through `.occ` files inside the `.occ/` folder of the project root.
 
 ## Quick Reference
 
 ```
-mkdir -p .uni
-cat > .uni/$(date +%s)-slug.uni << 'EOF'
+mkdir -p .occ
+cat > .occ/$(date +%s)-slug.occ << 'EOF'
 ---
 title: Short Title
 priority: medium
@@ -31,7 +31,7 @@ Do NOT nudge for routine progress updates or minor status changes.
 
 ## File Format
 
-Write files to `.uni/{unix-timestamp}-{short-slug}.uni`:
+Write files to `.occ/{unix-timestamp}-{short-slug}.occ`:
 
 ```
 ---
@@ -122,9 +122,9 @@ Your follow-up response here.
 
 ### Reading Human Responses
 
-1. Scan `.uni/*.uni` files for `next: ai`
+1. Scan `.occ/*.occ` files for `next: ai`
 2. Check `status`:
-   - `approved` — human clicked the primary button. Act on it, then **archive the file** by moving it to `.uni/archive/`. The human expects you to follow through.
+   - `approved` — human clicked the primary button. Act on it, then **archive the file** by moving it to `.occ/archive/`. The human expects you to follow through.
    - `rejected` — human clicked the secondary button. OCC already archived this file for you. No action needed.
    - `replied` — human typed a free-text reply. Read the last `---reply [human]` block. Continue the conversation or act on it.
    - `requested` — human initiated a new request. Read the body and work on it.
@@ -149,7 +149,7 @@ When you find `status: requested, next: ai`:
 
 ## Full Example
 
-AI creates `.uni/1711561200-deploy.uni`:
+AI creates `.occ/1711561200-deploy.occ`:
 ```
 ---
 title: Deploy v2.1.0?
@@ -211,8 +211,8 @@ Deployed to production. All health checks green. Monitoring for 30 min.
 - Never write more than 3 nudge files without human interaction
 - Title: under 60 chars. Body: under 280 chars.
 - Buttons: 1-2 words each, always exactly 2 options
-- Always `mkdir -p .uni` before writing
+- Always `mkdir -p .occ` before writing
 - Always set `status: pending` and `next: human` when creating or replying
 - Set `status: working` when you pick up a request (so the human sees you're on it)
-- **Archiving**: when you're done acting on an `approved` file, move it to `.uni/archive/` (`mv .uni/filename.uni .uni/archive/`). Rejected files are archived automatically by OCC. Replied/ongoing conversations stay in `.uni/` until resolved.
-- Never delete `.uni` files — always archive them so there's a history
+- **Archiving**: when you're done acting on an `approved` file, move it to `.occ/archive/` (`mv .occ/filename.occ .occ/archive/`). Rejected files are archived automatically by OCC. Replied/ongoing conversations stay in `.occ/` until resolved.
+- Never delete `.occ` files — always archive them so there's a history

@@ -13,7 +13,7 @@ struct ParsedOCCFile {
 }
 
 enum OCCFileParser {
-    /// Parses a `.uni` nudge file with frontmatter, body, and reply thread.
+    /// Parses a `.occ` nudge file with frontmatter, body, and reply thread.
     ///
     /// Format:
     /// ```

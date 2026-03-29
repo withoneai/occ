@@ -54,13 +54,27 @@ final class PillPanel: NSPanel {
         hostView.rootView = PillContainerView(router: router, position: newPosition)
         hostView.needsDisplay = true
 
-        guard let screen = NSScreen.main else { return }
+        repositionOnScreen()
+    }
+
+    func moveToScreen(id: UInt32) {
+        UserDefaults.standard.set(Int(id), forKey: "occ.pill.screenId")
+        repositionOnScreen()
+    }
+
+    private func repositionOnScreen() {
+        let savedId = UInt32(UserDefaults.standard.integer(forKey: "occ.pill.screenId"))
+        let screen = NSScreen.screens.first(where: { $0.displayId == savedId })
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
+
+        guard let screen else { return }
         let screenFrame = screen.visibleFrame
         let margin: CGFloat = 4
         let size = frame.size
 
         var origin: NSPoint
-        switch newPosition {
+        switch position {
         case .bottomRight:
             origin = NSPoint(
                 x: screenFrame.maxX - size.width - margin,

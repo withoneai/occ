@@ -2,8 +2,8 @@ import Foundation
 
 enum PillPosition: String, CaseIterable {
     case bottomLeft
-    case bottomRight
     case bottomCenter
+    case bottomRight
 
     private static let key = "occ.pill.position"
 
