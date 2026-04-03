@@ -1,4 +1,4 @@
-# OCC — One's Command Center
+# OneCC — One's Command Center
 
 A subtle macOS menu bar app that lets AI agents nudge you. They write a tiny file, you get a floating notification, you respond, they read your response. That's it.
 
@@ -28,7 +28,7 @@ Grab the latest release from [GitHub Releases](https://github.com/withoneai/occ/
 ### From source
 
 ```bash
-git clone https://github.com/anthropics/occ.git
+git clone https://github.com/withoneai/occ.git
 cd occ
 swift build -c release
 ```
@@ -36,7 +36,7 @@ swift build -c release
 Run it:
 
 ```bash
-.build/release/OCC
+.build/release/OneCC
 ```
 
 ### Build a shareable .app
@@ -45,17 +45,17 @@ Run it:
 bash scripts/build-release.sh
 ```
 
-This creates `dist/OCC.app` — drag it to Applications or send it to a friend.
+This creates `dist/OneCC.app` — drag it to Applications or send it to a friend.
 
 ## Quick Start
 
-### 1. Launch OCC
+### 1. Launch OneCC
 
-Run the binary or open the `.app`. A small icon appears in your menu bar. OCC runs as a menu bar app with no dock icon.
+Run the binary or open the `.app`. A small icon appears in your menu bar. OneCC runs as a menu bar app with no dock icon.
 
 ### 2. Add a watched folder
 
-Click the menu bar icon and click **+ Add Folder**. Pick your project directory. OCC will watch `<your-project>/.occ/` for nudge files.
+Click the menu bar icon and click **+ Add Folder**. Pick your project directory. OneCC will watch `<your-project>/.occ/` for nudge files.
 
 ### 3. Give your AI agent the nudge skill
 

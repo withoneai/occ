@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-APP_NAME="OCC"
-BUNDLE_ID="com.occ.app"
+APP_NAME="OneCC"
+BUNDLE_ID="com.onecc.app"
 VERSION="0.2.0"
 DIST_DIR="dist"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
@@ -18,12 +18,17 @@ mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
 
 # Copy binary
-cp .build/release/OCC "$APP_DIR/Contents/MacOS/$APP_NAME"
+cp .build/release/OneCC "$APP_DIR/Contents/MacOS/$APP_NAME"
 
 # Copy resources from the Swift Package bundle
-BUNDLE_PATH=$(find .build/release -name "OCC_OCC.bundle" -type d 2>/dev/null | head -1)
+BUNDLE_PATH=$(find .build/release -name "OneCC_OCC.bundle" -type d 2>/dev/null | head -1)
 if [ -n "$BUNDLE_PATH" ]; then
     cp -R "$BUNDLE_PATH"/* "$APP_DIR/Contents/Resources/" 2>/dev/null || true
+fi
+
+# Copy app icon
+if [ -f "OCC/Resources/AppIcon.icns" ]; then
+    cp "OCC/Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
 fi
 
 # Create Info.plist
@@ -35,7 +40,9 @@ cat > "$APP_DIR/Contents/Info.plist" << PLIST
     <key>CFBundleName</key>
     <string>$APP_NAME</string>
     <key>CFBundleDisplayName</key>
-    <string>One's Command Center</string>
+    <string>OneCC</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>$BUNDLE_ID</string>
     <key>CFBundleVersion</key>
@@ -51,7 +58,7 @@ cat > "$APP_DIR/Contents/Info.plist" << PLIST
     <key>LSUIElement</key>
     <true/>
     <key>NSCalendarsUsageDescription</key>
-    <string>OCC checks your calendar to provide meeting-related notifications.</string>
+    <string>OneCC checks your calendar to provide meeting-related notifications.</string>
 </dict>
 </plist>
 PLIST
@@ -63,5 +70,5 @@ echo "To use:"
 echo "  open $APP_DIR"
 echo ""
 echo "To share:"
-echo "  zip -r dist/OCC.zip $APP_DIR"
-echo "  # Send OCC.zip to your friend — they unzip and drag to Applications"
+echo "  zip -r dist/OneCC.zip $APP_DIR"
+echo "  # Send OneCC.zip to your friend — they unzip and drag to Applications"

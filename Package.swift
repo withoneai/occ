@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "OCC",
+    name: "OneCC",
     platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
-            name: "OCC",
+            name: "OneCC",
             path: "OCC",
             resources: [
                 .process("Resources")

@@ -3,17 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>OCC</string>
+    <string>OneCC</string>
     <key>CFBundleDisplayName</key>
-    <string>One's Command Center</string>
+    <string>OneCC</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.occ.app</string>
+    <string>com.onecc.app</string>
     <key>CFBundleVersion</key>
     <string>0.2.0</string>
     <key>CFBundleShortVersionString</key>
     <string>0.2.0</string>
     <key>CFBundleExecutable</key>
-    <string>OCC</string>
+    <string>OneCC</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
@@ -21,6 +23,6 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSCalendarsUsageDescription</key>
-    <string>OCC checks your calendar to provide meeting-related notifications.</string>
+    <string>OneCC checks your calendar to provide meeting-related notifications.</string>
 </dict>
 </plist>

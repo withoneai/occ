@@ -1,4 +1,4 @@
-# OCC — One's Command Center
+# OneCC — One's Command Center
 
 macOS menu bar app for receiving and responding to AI nudge notifications.
 
@@ -16,7 +16,7 @@ When in doubt, remove rather than add. Every element must earn its place.
 
 ```bash
 swift build        # Build the project
-swift run occ      # Run the app
+swift run OneCC    # Run the app
 ```
 
 ## Architecture
