@@ -188,6 +188,26 @@ The floating pill at the bottom of your screen is the notification widget:
 | Yellow dot | AI is working on your request |
 | Blinking yellow dot | AI is actively processing |
 
+## Buddies
+
+Pick a buddy to live in your pill. Each one is a pixel-art chibi drawn entirely in SwiftUI — no image assets.
+
+```
+  ∧,,,∧       ∧___∧      (\_/)       ∧ ∧        /\  /\       ◉ ◉       (·▽·)
+ ( ·ω· )     ( ◕ᴥ◕ )    ( ◕ᴗ◕ )    ( °▽° )    ( ◕ω◕ )    (◕  ◕)    /|    |\
+  Cat          Dog        Bunny       Owl         Fox        Panda     Penguin
+
+  ~~~          ∩           □□        (↑)         ☆         (~)(~)      ∧  
+ ( · · )      ( · )     [ ◕  ◕ ]   ( ‿ )     (✧ω✧)     (◕  ◕)    / · \
+  Slime       Ghost       Robot      Sprout      Star       Octo     Shroom
+
+  ◎            ◉           ∧          △
+ (◉  ◉)     (◕‿◕)      (  · ·)    ( ◕ω◕ )
+  Alien       Tanuki      Dragon     ...more?
+```
+
+They react to notifications — bouncing when a nudge arrives, blinking while the AI works, and celebrating when a task completes.
+
 ## Menu Bar Settings
 
 Click the menu bar icon to access:
