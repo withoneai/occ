@@ -21,6 +21,7 @@ struct PillContainerView: View {
                 PillInputView(
                     onSend: { message in
                         RequestWriter.sendRequest(message)
+                        router.markRequestSent()
                         withAnimation(.spring(response: 0.25, dampingFraction: 0.88)) {
                             showInlineInput = false
                         }
@@ -90,6 +91,7 @@ struct PillContainerView: View {
                 PillInputView(
                     onSend: { message in
                         RequestWriter.sendRequest(message)
+                        router.markRequestSent()
                         withAnimation(.spring(response: 0.25, dampingFraction: 0.88)) {
                             router.collapse()
                         }
@@ -109,7 +111,8 @@ struct PillContainerView: View {
                 priority: router.currentPriority,
                 count: router.activeNudges.count,
                 requestedCount: router.requestedCount,
-                workingCount: router.workingCount
+                workingCount: router.workingCount,
+                showingFlows: router.showingFlows
             )
             .onTapGesture {
                 switch router.state {
@@ -406,29 +409,56 @@ struct PillDot: View {
     let count: Int
     let requestedCount: Int
     let workingCount: Int
+    var showingFlows: Bool = false
 
+    @AppStorage("occ.pill.iconStyle") private var iconStyle: String = "logo"
     @State private var isPulsing = false
     @State private var glowOpacity: Double = 0
     @State private var statusBlink = false
     @State private var isHovering = false
 
     private var hasAiActivity: Bool { requestedCount > 0 || workingCount > 0 }
+    private var useChibi: Bool { iconStyle != "logo" }
 
     var body: some View {
         ZStack {
-            if isActive {
-                OCCIcon(color: .white, size: iconSize + 6)
-                    .opacity(glowOpacity * 0.3)
-                    .blur(radius: 6)
+            if useChibi {
+                // Chibi character
+                ChibiView(
+                    character: ChibiCharacter(rawValue: iconStyle) ?? .cat,
+                    state: state,
+                    hasNotification: count > 0,
+                    isWorking: isWorking,
+                    isRequested: requestedCount > 0 && workingCount == 0,
+                    notificationCount: count
+                )
+            } else {
+                // Logo
+                if isActive {
+                    OCCIcon(color: .white, size: iconSize + 6)
+                        .opacity(glowOpacity * 0.3)
+                        .blur(radius: 6)
+                }
+
+                OCCIcon(color: iconColor, size: iconSize)
+                    .opacity(iconOpacity)
+                    .shadow(color: .black.opacity(0.6), radius: 3, y: 1)
+                    .scaleEffect(isHovering ? 1.15 : (isPulsing ? 1.05 : 1.0))
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovering)
             }
 
-            OCCIcon(color: iconColor, size: iconSize)
-                .opacity(iconOpacity)
-                .scaleEffect(isHovering ? 1.25 : (isPulsing ? 1.05 : 1.0))
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovering)
+            if !useChibi {
+                // AI activity dot (logo mode only)
+                if hasAiActivity {
+                    Circle()
+                        .fill(.yellow)
+                        .frame(width: 5, height: 5)
+                        .opacity(isWorking ? (statusBlink ? 1.0 : 0.25) : 0.8)
+                        .shadow(color: .yellow.opacity(0.5), radius: isWorking && statusBlink ? 4 : 0)
+                        .offset(x: 12, y: -10)
+                }
 
-            // Badges
-            VStack(spacing: 2) {
+                // Count badge (logo mode only)
                 if count > 1 {
                     Text("\(count)")
                         .font(.system(size: 7, weight: .bold))
@@ -436,17 +466,9 @@ struct PillDot: View {
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
                         .background(Capsule().fill(.red.opacity(0.85)))
-                }
-
-                if hasAiActivity {
-                    Circle()
-                        .fill(.yellow)
-                        .frame(width: 5, height: 5)
-                        .opacity(isWorking ? (statusBlink ? 1.0 : 0.25) : 0.8)
-                        .shadow(color: .yellow.opacity(0.5), radius: isWorking && statusBlink ? 4 : 0)
+                        .offset(x: 14, y: -14)
                 }
             }
-            .offset(x: 12, y: count > 1 ? -6 : -10)
         }
         .onHover { hovering in
             isHovering = hovering
@@ -489,13 +511,17 @@ struct PillDot: View {
         (count > 0 || hasAiActivity) ? 20 : 18
     }
 
+    private static let brandYellow = Color(red: 243/255, green: 199/255, blue: 71/255) // #F3C747
+
     private var iconColor: Color {
+        if showingFlows { return Self.brandYellow }
         guard count > 0 || hasAiActivity else { return .white.opacity(0.25) }
         if hasAiActivity && count == 0 { return .white.opacity(0.5) }
         return .white
     }
 
     private var iconOpacity: Double {
+        if showingFlows { return 1.0 }
         if hasAiActivity && count == 0 { return 0.6 }
         guard count > 0 else { return 0.4 }
         switch state {

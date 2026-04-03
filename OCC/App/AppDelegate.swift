@@ -14,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     let nudgeRouter = NotificationRouter()
     let watchedFolders = WatchedFolders()
+    let flowStore = FlowStore()
+    let skillStore = SkillStore()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupMenuBar()
@@ -138,7 +140,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupPillPanel() {
         let position = PillPosition.current
-        pillPanel = PillPanel(router: nudgeRouter, position: position)
+        pillPanel = PillPanel(router: nudgeRouter, flowStore: flowStore, skillStore: skillStore, position: position)
         pillPanel.orderFrontRegardless()
     }
 
@@ -163,6 +165,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ReplyWriter.watchedFolderPaths = pathMap
         RequestWriter.watchedFolderPaths = pathMap
 
+        // Load flows from watched folders
+        flowStore.loadFlows(from: watchedFolders.folders)
+        skillStore.loadSkills(from: watchedFolders.folders)
+
         // React to folder list changes
         folderSubscription = watchedFolders.$folders
             .removeDuplicates()
@@ -178,6 +184,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 ReplyWriter.watchedFolderPaths = pathMap
                 RequestWriter.watchedFolderPaths = pathMap
+
+                // Reload flows and skills
+                self.flowStore.loadFlows(from: folders)
+                self.skillStore.loadSkills(from: folders)
             }
     }
 }

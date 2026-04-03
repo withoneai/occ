@@ -123,11 +123,17 @@ final class FolderWatcher: @unchecked Sendable {
 
             let hash = content.hashValue
 
-            // Track AI-side statuses
+            // Track AI-side statuses — any file where next=ai means AI is busy
             if let raw = OCCFileParser.parseRaw(content: content) {
+                let next = raw.frontmatter["next"] ?? "human"
                 let status = raw.frontmatter["status"] ?? "pending"
-                if status == "requested" { requestedCount += 1 }
-                if status == "working" { workingCount += 1 }
+                if next == "ai" {
+                    if status == "working" {
+                        workingCount += 1
+                    } else {
+                        requestedCount += 1
+                    }
+                }
             }
 
             // Skip if content hasn't changed since last check
@@ -136,13 +142,15 @@ final class FolderWatcher: @unchecked Sendable {
             watchers[folderURL] = watch
 
             let folderName = folderURL.lastPathComponent
-            guard let nudge = OCCFileParser.parse(content: content, sourceFolder: folderName, sourceFile: name) else {
-                continue
-            }
+            let nudge = OCCFileParser.parse(content: content, sourceFolder: folderName, sourceFile: name)
 
+            // Single Task to ensure fileChanged runs before push
             let router = self.router
             Task { @MainActor in
-                router.push(nudge)
+                router.fileChanged(name)
+                if let nudge {
+                    router.push(nudge)
+                }
             }
         }
 

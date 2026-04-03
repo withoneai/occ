@@ -14,6 +14,7 @@ enum NudgeStatus: String, Codable {
     case rejected
     case replied
     case dismissed
+    case done
 }
 
 struct NudgeReply: Identifiable, Codable {
@@ -50,9 +51,13 @@ struct Nudge: Identifiable, Codable {
     let action: String?
     let sourceFolder: String?
     let sourceFile: String?
+    let from: String?          // "human" or "ai" — who initiated the conversation
     var status: NudgeStatus
     var replies: [NudgeReply]
     let buttons: NudgeButtons
+
+    /// True if this nudge is a reply to something the human initiated
+    var isReplyToHuman: Bool { from == "human" }
 
     init(
         id: UUID = UUID(),
@@ -65,6 +70,7 @@ struct Nudge: Identifiable, Codable {
         action: String? = nil,
         sourceFolder: String? = nil,
         sourceFile: String? = nil,
+        from: String? = nil,
         status: NudgeStatus = .pending,
         replies: [NudgeReply] = [],
         buttons: NudgeButtons = .default
@@ -79,6 +85,7 @@ struct Nudge: Identifiable, Codable {
         self.action = action
         self.sourceFolder = sourceFolder
         self.sourceFile = sourceFile
+        self.from = from
         self.status = status
         self.replies = replies
         self.buttons = buttons

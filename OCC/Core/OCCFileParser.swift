@@ -45,11 +45,13 @@ enum OCCFileParser {
 
         // Skip already completed conversations
         let status = parsed.frontmatter["status"] ?? "pending"
-        guard status == "pending" || status == "replied" else { return nil }
+        guard status == "pending" || status == "replied" || status == "done" else { return nil }
 
+        let nudgeStatus = NudgeStatus(rawValue: status) ?? .pending
         let priority = NudgePriority(rawValue: parsed.frontmatter["priority"] ?? "medium") ?? .medium
         let url = parsed.frontmatter["url"].flatMap { URL(string: $0) }
         let action = parsed.frontmatter["action"]
+        let from = parsed.frontmatter["from"] // "human" or "ai"
 
         let displayBody = parsed.body.isEmpty ? nil : parsed.body
 
@@ -79,6 +81,8 @@ enum OCCFileParser {
             action: action,
             sourceFolder: sourceFolder,
             sourceFile: sourceFile,
+            from: from,
+            status: nudgeStatus,
             replies: nudgeReplies,
             buttons: buttons
         )

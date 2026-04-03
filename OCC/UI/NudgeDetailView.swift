@@ -56,7 +56,7 @@ struct NudgeDetailView: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 5) {
                         if let body = nudge.body {
-                            MessageBubble(text: body, sender: "ai")
+                            MessageBubble(text: body, sender: nudge.from ?? "ai")
                         }
                         ForEach(nudge.replies) { reply in
                             MessageBubble(text: reply.message, sender: reply.sender)
@@ -154,43 +154,64 @@ struct NudgeDetailView: View {
                 .frame(height: 0.5)
 
             HStack(spacing: 0) {
-                ActionButton(icon: "checkmark", label: nudge.buttons.primary, color: .green) {
-                    onRespond(.approved, nudge.buttons.primary)
-                }
-
-                ActionDivider()
-
-                ActionButton(icon: "xmark", label: nudge.buttons.secondary, color: .red) {
-                    onRespond(.rejected, nudge.buttons.secondary)
-                }
-
-                ActionDivider()
-
-                ActionButton(icon: "arrowshape.turn.up.left", label: "Reply", color: .blue) {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        showReplyField.toggle()
-                    }
-                    if showReplyField {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            NSApp.activate(ignoringOtherApps: true)
-                            replyFocused = true
+                if nudge.status == .done {
+                    // Done nudges: just acknowledge + reply
+                    ActionButton(icon: "arrowshape.turn.up.left", label: "Reply", color: .blue) {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            showReplyField.toggle()
+                        }
+                        if showReplyField {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                NSApp.activate(ignoringOtherApps: true)
+                                replyFocused = true
+                            }
                         }
                     }
-                }
 
-                if let url = nudge.url {
                     ActionDivider()
 
-                    ActionButton(icon: "arrow.up.right", label: nudge.action ?? "Open", color: .white) {
-                        NSWorkspace.shared.open(url)
+                    ActionButton(icon: "checkmark", label: "OK", color: .green) {
+                        onRespond(.dismissed, nil)
                     }
-                }
+                } else {
+                    ActionButton(icon: "checkmark", label: nudge.buttons.primary, color: .green) {
+                        onRespond(.approved, nudge.buttons.primary)
+                    }
 
-                ActionDivider()
+                    ActionDivider()
 
-                // Dismiss — archive without action
-                ActionButton(icon: "archivebox", label: "Done", color: .gray) {
-                    onRespond(.dismissed, nil)
+                    ActionButton(icon: "xmark", label: nudge.buttons.secondary, color: .red) {
+                        onRespond(.rejected, nudge.buttons.secondary)
+                    }
+
+                    ActionDivider()
+
+                    ActionButton(icon: "arrowshape.turn.up.left", label: "Reply", color: .blue) {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            showReplyField.toggle()
+                        }
+                        if showReplyField {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                NSApp.activate(ignoringOtherApps: true)
+                                replyFocused = true
+                            }
+                        }
+                    }
+
+                    if let url = nudge.url {
+                        ActionDivider()
+
+                        ActionButton(icon: "arrow.up.right", label: nudge.action ?? "Open", color: .white) {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+
+                    ActionDivider()
+
+                    // Dismiss — archive without action
+                    ActionButton(icon: "archivebox", label: "Done", color: .gray) {
+                        onRespond(.dismissed, nil)
+                    }
                 }
             }
             .frame(height: 28)
@@ -262,7 +283,7 @@ struct NudgeDetailView: View {
         if let lastReply = nudge.replies.last {
             MessageBubble(text: lastReply.message, sender: lastReply.sender)
         } else if let body = nudge.body {
-            MessageBubble(text: body, sender: "ai")
+            MessageBubble(text: body, sender: nudge.from ?? "ai")
         }
     }
 
@@ -380,7 +401,7 @@ struct ExpandedNudgeView: View {
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: 8) {
                     if let body = nudge.body {
-                        ExpandedBubble(text: body, sender: "ai")
+                        ExpandedBubble(text: body, sender: nudge.from ?? "ai")
                     }
 
                     ForEach(nudge.replies) { reply in
@@ -427,22 +448,28 @@ struct ExpandedNudgeView: View {
                 )
 
                 HStack(spacing: 10) {
-                    ExpandedActionButton(label: nudge.buttons.primary, color: .green) {
-                        onRespond(.approved, nudge.buttons.primary)
-                    }
-
-                    ExpandedActionButton(label: nudge.buttons.secondary, color: .red) {
-                        onRespond(.rejected, nudge.buttons.secondary)
-                    }
-
-                    if let url = nudge.url {
-                        ExpandedActionButton(label: nudge.action ?? "Open", color: .blue) {
-                            NSWorkspace.shared.open(url)
+                    if nudge.status == .done {
+                        ExpandedActionButton(label: "OK", color: .green) {
+                            onRespond(.dismissed, nil)
                         }
-                    }
+                    } else {
+                        ExpandedActionButton(label: nudge.buttons.primary, color: .green) {
+                            onRespond(.approved, nudge.buttons.primary)
+                        }
 
-                    ExpandedActionButton(label: "Done", color: .gray) {
-                        onRespond(.dismissed, nil)
+                        ExpandedActionButton(label: nudge.buttons.secondary, color: .red) {
+                            onRespond(.rejected, nudge.buttons.secondary)
+                        }
+
+                        if let url = nudge.url {
+                            ExpandedActionButton(label: nudge.action ?? "Open", color: .blue) {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }
+
+                        ExpandedActionButton(label: "Done", color: .gray) {
+                            onRespond(.dismissed, nil)
+                        }
                     }
                 }
             }

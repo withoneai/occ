@@ -11,6 +11,7 @@ struct MenuBarPopover: View {
 
     @AppStorage("occ.pill.position") private var positionRaw = PillPosition.bottomRight.rawValue
     @AppStorage("occ.pill.screenId") private var selectedScreenId: Int = 0
+    @AppStorage("occ.pill.iconStyle") private var iconStyle: String = "logo"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -47,6 +48,38 @@ struct MenuBarPopover: View {
                             .onChange(of: positionRaw) { newValue in
                                 if let pos = PillPosition(rawValue: newValue) {
                                     onPositionChange(pos)
+                                }
+                            }
+                        }
+                    }
+
+                    // Icon Style
+                    popoverSection {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Buddy", systemImage: "sparkles")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.primary)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 6) {
+                                    // Logo option
+                                    buddyOption(id: "logo", label: "Logo") {
+                                        OCCIcon(color: .white, size: 14)
+                                    }
+
+                                    // Character options
+                                    ForEach(ChibiCharacter.allCases, id: \.rawValue) { char in
+                                        buddyOption(id: char.rawValue, label: char.label) {
+                                            ChibiView(
+                                                character: char,
+                                                state: .idle,
+                                                hasNotification: false,
+                                                isWorking: false,
+                                                isRequested: false,
+                                                notificationCount: 0
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -221,6 +254,28 @@ struct MenuBarPopover: View {
     // MARK: - Components
 
     @ViewBuilder
+    private func buddyOption<Icon: View>(id: String, label: String, @ViewBuilder icon: () -> Icon) -> some View {
+        Button {
+            iconStyle = id
+        } label: {
+            VStack(spacing: 4) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(iconStyle == id ? .white.opacity(0.12) : .white.opacity(0.04))
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(iconStyle == id ? .white.opacity(0.2) : .clear, lineWidth: 1)
+                    icon()
+                }
+                .frame(width: 32, height: 32)
+
+                Text(label)
+                    .font(.system(size: 8))
+                    .foregroundStyle(iconStyle == id ? .white : .white.opacity(0.4))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
     private func popoverSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             content()
@@ -256,6 +311,7 @@ struct MenuBarPopover: View {
         case .pending: return .orange
         case .requested: return .yellow
         case .working: return .green
+        case .done: return .green
         }
     }
 }

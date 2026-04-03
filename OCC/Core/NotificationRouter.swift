@@ -17,7 +17,12 @@ final class NotificationRouter: ObservableObject {
     @Published var workingCount: Int = 0
 
     @Published var currentIndex: Int = 0
+    @Published var showingFlows: Bool = false
     private var autoDismissTask: Task<Void, Never>?
+
+    /// Tracks sourceFiles we've already handled (active, responded, or dismissed)
+    /// to prevent the same file from being pushed again on re-scan.
+    private var handledFiles: Set<String> = []
 
     var currentPriority: NudgePriority {
         currentNudge?.priority ?? activeNudges.first?.priority ?? .medium
@@ -29,11 +34,29 @@ final class NotificationRouter: ObservableObject {
     }
 
     func push(_ nudge: Nudge) {
-        print("[OCC] Push nudge: \(nudge.title) — state=\(state), active=\(activeNudges.count)")
+        // Deduplicate: skip if this source file is already active or was recently handled
+        if let file = nudge.sourceFile {
+            if handledFiles.contains(file) { return }
+            if activeNudges.contains(where: { $0.sourceFile == file }) { return }
+            handledFiles.insert(file)
+        }
+
+        print("[OCC] Push nudge: \(nudge.title) [from=\(nudge.from ?? "unknown"), replies=\(nudge.replies.count), body=\(nudge.body?.prefix(30) ?? "nil")] — state=\(state), active=\(activeNudges.count)")
         activeNudges.insert(nudge, at: 0)
         currentIndex = 0
         state = .active
         startAutoDismissTimer()
+    }
+
+    /// Called when a file changes on disk (e.g. AI updates it).
+    /// Allows re-evaluation of a previously handled file.
+    /// Called immediately when the user sends a request, before the file watcher picks it up.
+    func markRequestSent() {
+        requestedCount = max(requestedCount, 1)
+    }
+
+    func fileChanged(_ sourceFile: String) {
+        handledFiles.remove(sourceFile)
     }
 
     func expand() {
@@ -61,6 +84,11 @@ final class NotificationRouter: ObservableObject {
             var dismissed = nudge
             if dismissed.status == .pending { dismissed.status = .dismissed }
             history.insert(dismissed, at: 0)
+
+            // Write dismissal to disk so it doesn't re-appear
+            if dismissed.status == .dismissed {
+                ReplyWriter.writeReply(for: nudge, status: .dismissed, message: nil)
+            }
         }
         if history.count > 50 { history = Array(history.prefix(50)) }
         activeNudges.removeAll()
@@ -73,6 +101,11 @@ final class NotificationRouter: ObservableObject {
         history.insert(dismissed, at: 0)
         if history.count > 50 { history = Array(history.prefix(50)) }
         activeNudges.removeAll { $0.id == nudge.id }
+
+        // Write dismissal to disk so it doesn't re-appear
+        if dismissed.status == .dismissed {
+            ReplyWriter.writeReply(for: nudge, status: .dismissed, message: nil)
+        }
 
         if activeNudges.isEmpty {
             autoDismissTask?.cancel()
