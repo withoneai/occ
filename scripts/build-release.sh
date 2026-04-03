@@ -63,6 +63,11 @@ cat > "$APP_DIR/Contents/Info.plist" << PLIST
 </plist>
 PLIST
 
+# Ad-hoc codesign so macOS doesn't flag as "damaged"
+codesign --force --deep --sign - "$APP_DIR"
+# Strip quarantine attribute
+xattr -cr "$APP_DIR"
+
 echo ""
 echo "Built: $APP_DIR"
 echo ""

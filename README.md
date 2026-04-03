@@ -23,7 +23,11 @@ Everything happens through `.occ` files in your project's `.occ/` directory. No 
 
 Grab the latest release from [GitHub Releases](https://github.com/withoneai/occ/releases/latest). Unzip, drag to Applications, and run.
 
-> macOS may show a security warning since the app isn't signed. Right-click the app → **Open** to bypass.
+> **"OneCC is damaged and can't be opened"** — macOS quarantines unsigned apps. Fix it with:
+> ```bash
+> xattr -cr /Applications/OneCC.app
+> ```
+> Then open normally. This only needs to be done once.
 
 ### From source
 
