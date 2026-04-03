@@ -19,6 +19,12 @@ Everything happens through `.occ` files in your project's `.occ/` directory. No 
 
 ## Install
 
+### Download
+
+Grab the latest release from [GitHub Releases](https://github.com/withoneai/occ/releases/latest). Unzip, drag to Applications, and run.
+
+> macOS may show a security warning since the app isn't signed. Right-click the app → **Open** to bypass.
+
 ### From source
 
 ```bash
